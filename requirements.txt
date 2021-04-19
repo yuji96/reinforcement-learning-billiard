@@ -1,4 +1,8 @@
 git+https://github.com/yuji96/python-billiards.git
 gym
+keras-rl2
 matplotlib
 pyglet
+scikit-learn
+tensorflow==2.1.0
+tqdm
