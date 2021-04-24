@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
 
+import billiard_gym  # noqa
 from utils import Buffer, OUActionNoise, get_actor, get_critic, policy, update_target
 print("end import")
 
@@ -38,6 +39,9 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
             update_target(target_actor.variables, actor_model.variables, tau)
             update_target(target_critic.variables, critic_model.variables, tau)
 
+            print(f"-- Episode: {ep} "+"-"*20)
+            print(f"Reward: {reward}\tDone: {done}\nState: {state}")
+
             # End this episode when `done` is True
             if done:
                 break
@@ -48,7 +52,7 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
 
         # Mean of last 40 episodes
         avg_reward = np.mean(ep_reward_list[-40:])
-        print("Episode * {} * Avg Reward is ==> {}".format(ep, avg_reward))
+        # print("Episode * {ep} * Avg Reward is ==> {avg_reward}")
         avg_reward_list.append(avg_reward)
 
     plt.plot(avg_reward_list)
@@ -64,18 +68,13 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
 
 
 if __name__ == "__main__":
-    env = gym.make("Pendulum-v0")
+    env = gym.make("billiard-v0")
     env_info = {
-        "num_states": env.observation_space.shape[0],
-        "num_actions": env.action_space.shape[0],
+        "num_states": env.observation_space.shape,
+        "num_actions": env.action_space.shape,
         "upper_bound": env.action_space.high[0],
         "lower_bound": env.action_space.low[0],
     }
-
-    print("Size of State Space ->  {}".format(env_info["num_states"]))
-    print("Size of Action Space ->  {}".format(env_info["num_actions"]))
-    print("Max Value of Action ->  {}".format(env_info["upper_bound"]))
-    print("Min Value of Action ->  {}".format(env_info["lower_bound"]))
 
     actor_model = get_actor(**env_info)
     critic_model = get_critic(**env_info)
@@ -92,4 +91,4 @@ if __name__ == "__main__":
                     critic_optimizer, actor_optimizer,
                     buffer_capacity=50000, batch_size=64, **env_info)
 
-    train(env_info, buffer, total_episodes=10)
+    train(env_info, buffer, total_episodes=10000)
