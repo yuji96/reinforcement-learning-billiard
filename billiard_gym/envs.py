@@ -3,6 +3,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
 
 from config import Ball, CUSHIONS, INITIAL_WHITE_POS, LENGTH, RADIUS, WIDTH
 
@@ -72,24 +73,23 @@ class BilliardEnv(gym.Env):
     def __init__(self):
         super().__init__()
         self.action_space = gym.spaces.Box(low=0, high=2 * np.pi, shape=(1,), dtype=np.float32)
-        self.observation_space = gym.spaces.Tuple([
-            gym.spaces.Box(low=0, high=LENGTH, shape=(3, 2), dtype=np.float32),
-            gym.spaces.Box(low=0, high=200, shape=(3, 2), dtype=np.float32),
-        ])
+
+        low = np.array([0] * 6 + [-200] * 6)
+        high = np.array([LENGTH] * 6 + [200] * 6)
+        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
         self.simulator = None
         self.position_df = None
         self.reset()
 
     def reset(self):
         """状態を初期化し、初期の観測値を返す."""
-        self.relocate(initial=True)
+        self.relocate()
         return self.observation
 
     def step(self, action):
         """actionを実行し、結果を返す."""
         rad, *_ = action
-        self.relocate()
-        self.set_white_ball(rad)
+        self.relocate(rad)
 
         self.position_df = self.simulator.simulate()
         return self.observation, self.reward, self.done, {}
@@ -105,7 +105,7 @@ class BilliardEnv(gym.Env):
 
     @property
     def observation(self):
-        return self.simulator.balls_position, self.simulator.balls_velocity
+        return np.array([self.simulator.balls_position, self.simulator.balls_velocity]).flatten()
 
     @property
     def reward(self, success_reward=100, intercept=50, scale=15):
@@ -121,8 +121,8 @@ class BilliardEnv(gym.Env):
     def done(self):
         return not self.simulator.is_success
 
-    def relocate(self, initial=False):
-        if initial:
+    def relocate(self, rad=None):
+        if rad is None:
             yellow_pos = (LENGTH * 0.25, WIDTH * 0.5)
             red_pos = (LENGTH * 0.75, WIDTH * 0.5)
         else:
@@ -131,12 +131,16 @@ class BilliardEnv(gym.Env):
         self.simulator = Simulator()
         for pos in [yellow_pos, red_pos]:
             self.simulator.add_ball(pos, (0, 0), RADIUS)
-    
-    def set_white_ball(self, rad):
+        self.set_white_ball(rad)
+
+    def set_white_ball(self, rad=None):
         if self.simulator.balls_position.shape[0] == 3:
             white_pos = self.simulator.balls_position[2]
         else:
             white_pos = INITIAL_WHITE_POS
+        
+        # TODO: ここはstateに含める必要がない！
+        rad = rad if (rad is not None) else random.uniform(0, 360)
 
         direction = rotate(rad)
         speed = 60
