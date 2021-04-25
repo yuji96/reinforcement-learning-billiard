@@ -74,8 +74,8 @@ class BilliardEnv(gym.Env):
         super().__init__()
         self.action_space = gym.spaces.Box(low=0, high=2 * np.pi, shape=(1,), dtype=np.float32)
 
-        low = np.array([0] * 6 + [-200] * 6)
-        high = np.array([LENGTH] * 6 + [200] * 6)
+        low = np.array([0] * 6 + [-200] * 2)
+        high = np.array([LENGTH] * 6 + [200] * 2)
         self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
         self.simulator = None
         self.position_df = None
@@ -105,7 +105,9 @@ class BilliardEnv(gym.Env):
 
     @property
     def observation(self):
-        return np.array([self.simulator.balls_position, self.simulator.balls_velocity]).flatten()
+        pos = np.array(self.simulator.balls_position).flatten()
+        vel = np.array(self.simulator.balls_velocity).flatten()[4:]
+        return np.hstack([pos, vel])
 
     @property
     def reward(self, success_reward=100, intercept=50, scale=15):
@@ -133,13 +135,12 @@ class BilliardEnv(gym.Env):
             self.simulator.add_ball(pos, (0, 0), RADIUS)
         self.set_white_ball(rad)
 
-    def set_white_ball(self, rad=None):
+    def set_white_ball(self, rad):
         if self.simulator.balls_position.shape[0] == 3:
             white_pos = self.simulator.balls_position[2]
         else:
             white_pos = INITIAL_WHITE_POS
-        
-        # TODO: ここはstateに含める必要がない！
+
         rad = rad if (rad is not None) else random.uniform(0, 360)
 
         direction = rotate(rad)

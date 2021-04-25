@@ -2,10 +2,10 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow as tf
+from tqdm import tqdm
 
 import billiard_gym  # noqa
 from utils import Buffer, OUActionNoise, get_actor, get_critic, policy, update_target
-print("end import")
 
 
 def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0.005):
@@ -17,10 +17,8 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
 
     # To store reward history of each episode
     ep_reward_list = []
-    # To store average reward history of last few episodes
-    avg_reward_list = []
 
-    for ep in range(total_episodes):
+    for ep in tqdm(range(total_episodes)):
 
         prev_state = env.reset()
         episodic_reward = 0
@@ -39,8 +37,9 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
             update_target(target_actor.variables, actor_model.variables, tau)
             update_target(target_critic.variables, critic_model.variables, tau)
 
-            print(f"-- Episode: {ep} "+"-"*20)
-            print(f"Reward: {reward}\tDone: {done}\nState: {state}")
+            if reward >= 40:
+                print(f"-- Episode: {ep} "+"-"*20)
+                print(f"Reward: {reward}\tDone: {done}\nState: {state}")
 
             # End this episode when `done` is True
             if done:
@@ -50,21 +49,17 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
 
         ep_reward_list.append(episodic_reward)
 
-        # Mean of last 40 episodes
-        avg_reward = np.mean(ep_reward_list[-40:])
-        # print("Episode * {ep} * Avg Reward is ==> {avg_reward}")
-        avg_reward_list.append(avg_reward)
+    # # Plot reward
+    # plt.plot(ep_reward_list)
+    # plt.xlabel("Episode")
+    # plt.ylabel("Reward")
+    # plt.savefig("reward.png")
 
-    plt.plot(avg_reward_list)
-    plt.xlabel("Episode")
-    plt.ylabel("Avg. Epsiodic Reward")
-    plt.savefig("reward.png")
-
-    # Save the weights
-    # actor_model.save_weights(".model/pendulum_actor.h5")
-    # critic_model.save_weights(".model/pendulum_critic.h5")
-    # target_actor.save_weights(".model/pendulum_target_actor.h5")
-    # target_critic.save_weights(".model/pendulum_target_critic.h5")
+    # # Save the weights
+    # actor_model.save_weights(".model/billiard_actor.h5")
+    # critic_model.save_weights(".model/billiard_critic.h5")
+    # target_actor.save_weights(".model/billiard_target_actor.h5")
+    # target_critic.save_weights(".model/billiard_target_critic.h5")
 
 
 if __name__ == "__main__":
@@ -89,6 +84,6 @@ if __name__ == "__main__":
 
     buffer = Buffer(actor_model, critic_model, target_actor, target_critic,
                     critic_optimizer, actor_optimizer,
-                    buffer_capacity=50000, batch_size=64, **env_info)
+                    buffer_capacity=50000, batch_size=256, **env_info)
 
-    train(env_info, buffer, total_episodes=10000)
+    train(env_info, buffer, total_episodes=1000)
