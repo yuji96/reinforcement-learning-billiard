@@ -39,6 +39,7 @@ def train(env_info, buffer, total_episodes=100, noise_std=0.2, gamma=0.99, tau=0
 
             if reward >= 40:
                 print(f"-- Episode: {ep} "+"-"*20)
+                print(f"Action: {action}")
                 print(f"Reward: {reward}\tDone: {done}\nState: {state}")
 
             # End this episode when `done` is True

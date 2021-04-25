@@ -133,7 +133,7 @@ def update_target(target_weights, weights, tau):
 
 def get_actor(num_states, upper_bound, **kwargs):
     # Initialize weights between -3e-3 and 3-e3
-    last_init = tf.random_uniform_initializer(minval=-0.003, maxval=0.003)
+    last_init = tf.random_uniform_initializer(minval=-0.05, maxval=0.05)
 
     inputs = layers.Input(shape=num_states)
     out = layers.Dense(256, activation="relu")(inputs)

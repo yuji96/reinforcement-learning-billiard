@@ -74,9 +74,9 @@ class BilliardEnv(gym.Env):
         super().__init__()
         self.action_space = gym.spaces.Box(low=0, high=2 * np.pi, shape=(1,), dtype=np.float32)
 
-        low = np.array([0] * 6 + [-200] * 2)
-        high = np.array([LENGTH] * 6 + [200] * 2)
-        self.observation_space = gym.spaces.Box(low=low, high=high, dtype=np.float32)
+        low = np.array([0] * 6 + [-200] * 2, dtype=np.float32)
+        high = np.array([LENGTH] * 6 + [200] * 2, dtype=np.float32)
+        self.observation_space = gym.spaces.Box(low=low, high=high)
         self.simulator = None
         self.position_df = None
         self.reset()
