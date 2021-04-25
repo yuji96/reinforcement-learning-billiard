@@ -94,14 +94,20 @@ class BilliardEnv(gym.Env):
         self.position_df = self.simulator.simulate()
         return self.observation, self.reward, self.done, {}
 
-    def render(self, mode="human"):
+    def render(self, path=None, mode="human"):
         fig, ax = plt.subplots(1, 1)
-        for i in range(3):
-            ax.plot(*zip(*self.position_df[i]))
-            ax.scatter(*self.position_df[i].iat[0], marker="o")
+        for i, color in enumerate(["red", "orange", "black"]):
+            ax.plot(*zip(*self.position_df[i]), color=color)
+            ax.scatter(*self.position_df[i].iat[0], marker="o", color=color)
+            ax.scatter(*self.position_df[i].iat[-1], marker="x", color=color)
         ax.set_xlim([0, LENGTH])
         ax.set_ylim([0, WIDTH])
-        plt.show()
+        ax.set_title("o: start, x: stop")
+        ax.set_aspect('equal')
+        if path is None:
+            plt.show()
+        else:
+            plt.savefig(path)
 
     @property
     def observation(self):
